@@ -6,7 +6,7 @@ FLAGS = -g -Wall
 
 default:all
 
-all: example echo_server echo_client
+all: lisod
 
 lex.yy.c: lexer.l
 	flex $^
@@ -20,11 +20,13 @@ y.tab.c: parser.y
 example: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
-echo_server: $(OBJ)
-	$(CC) -o $@ $^ -Wall -Werror
+echo_server: 
+	$(CC) echo_client.c -o echo_client -Wall -Werror
 
 echo_client:
 	$(CC) echo_client.c -o echo_client -Wall -Werror
 
+lisod: $(OBJ)
+	$(CC) -o $@ $^ -Wall -Werror
 clean:
 	rm -f *~ *.o example lex.yy.c y.tab.c y.tab.h echo_server echo_client
