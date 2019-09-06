@@ -22,7 +22,7 @@
 #include <sys/time.h>
 #include "parse.h"
 
-#define ECHO_PORT 9999
+#define ECHO_PORT 6849
 #define BUF_SIZE 4096
 
 int close_socket(int sock)
@@ -106,7 +106,6 @@ int main(int argc, char* argv[])
                 }else{
                     memset(buf, 0, BUF_SIZE);
                     readret = recv(i, buf, BUF_SIZE, 0);
-                    /* 
                     if (send(i, buf, readret, 0) != readret)
                     {
                         close_socket(i);
@@ -114,7 +113,6 @@ int main(int argc, char* argv[])
                         fprintf(stderr, "Error sending to client.\n");
                         //return EXIT_FAILURE;
                     }
-                    */
                     if (readret >= 1){
                         Request* r = parse(buf, readret, i);
                         if(r == NULL){
