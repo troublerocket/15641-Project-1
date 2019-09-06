@@ -1,5 +1,5 @@
 /******************************************************************************
-* lisod.c                                                               *
+* lisod.c                                                                     *
 *                                                                             *
 * Description: This file contains the C source code for an echo server.  The  *
 *              server runs on a hard-coded port and simply write back anything*
@@ -18,6 +18,8 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include "parse.h"
 
 #define ECHO_PORT 9999
@@ -40,7 +42,7 @@ int main(int argc, char* argv[])
     socklen_t cli_size;
     struct sockaddr_in addr, cli_addr;
     char buf[BUF_SIZE];
-    struct fd_set fds, read_fds;
+    fd_set fds, read_fds;
     struct timeval timeout={0,0}; 
 
     FD_ZERO(&fds);
@@ -86,7 +88,8 @@ int main(int argc, char* argv[])
        {
            exit(1);
        } 
-       for(int i = 0; i <= maxfdp; i++){
+       int i = 0;
+       for(i = 0; i <= maxfdp; i++){
            if(FD_ISSET(i, &read_fds)){
                if(sock == i){
                    cli_size = sizeof(cli_addr);
@@ -113,8 +116,8 @@ int main(int argc, char* argv[])
                     if (readret >= 1){
                         Request* r = parse(buf, readret, i);
                         if(r == NULL){
-                            send(i, 'HTTP/1.1 400 Bad Request\r\n\r\n', 
-                                strlen('HTTP/1.1 400 Bad Request\r\n\r\n'), 0);
+                            send(i, "HTTP/1.1 400 Bad Request\r\n\r\n", 
+                                strlen("HTTP/1.1 400 Bad Request\r\n\r\n"), 0);
                         }else{
                             send(i, buf, readret, 0);
                         }

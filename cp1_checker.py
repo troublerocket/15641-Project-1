@@ -27,7 +27,7 @@ socketList = []
 RECV_TOTAL_TIMEOUT = 0.1
 RECV_EACH_TIMEOUT = 0.01
 
-for i in xrange(numConnections):
+for i in range(numConnections):
     s = socket(AF_INET, SOCK_STREAM)
     s.connect((serverHost, serverPort))
     socketList.append(s)
@@ -42,12 +42,12 @@ BAD_REQUESTS = [
 
 BAD_REQUEST_RESPONSE = 'HTTP/1.1 400 Bad Request\r\n\r\n'
 
-for i in xrange(numTrials):
+for i in range(numTrials):
     socketSubset = []
     randomData = []
     randomLen = []
     socketSubset = random.sample(socketList, numConnections)
-    for j in xrange(numWritesReads):
+    for j in range(numWritesReads):
         random_index = random.randrange(len(GOOD_REQUESTS) + len(BAD_REQUESTS))
         if random_index < len(GOOD_REQUESTS):
             random_string = GOOD_REQUESTS[random_index]
@@ -59,7 +59,7 @@ for i in xrange(numTrials):
             randomData.append(BAD_REQUEST_RESPONSE)
         socketSubset[j].send(random_string)
 
-    for j in xrange(numWritesReads):
+    for j in range(numWritesReads):
         data = socketSubset[j].recv(randomLen[j])
         start_time = time.time()
         while True:
@@ -73,7 +73,7 @@ for i in xrange(numTrials):
             sys.stderr.write("Error: Data received is not the same as sent! \n")
             sys.exit(1)
 
-for i in xrange(numConnections):
+for i in range(numConnections):
     socketList[i].close()
 
-print "Success!"
+print ("Success!")

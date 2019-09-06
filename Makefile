@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-I.
 DEPS = parse.h y.tab.h
-OBJ = y.tab.o lex.yy.o parse.o example.o
+OBJ = y.tab.o lex.yy.o parse.o lisod.o
 FLAGS = -g -Wall
 
 default:all
