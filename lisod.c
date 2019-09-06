@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
        read_fds = fds; 
        if(select(maxfdp + 1, &read_fds, NULL, NULL, &timeout) == -1)
        {
-           exit(4);
+           exit(1);
        } 
        for(int i = 0; i <= maxfdp; i++){
            if(FD_ISSET(i, &read_fds)){

@@ -61,7 +61,7 @@ Request * parse(char *buffer, int size, int socketFd) {
 			free(request->headers);
 			free(request);
 			printf("Parsing Failed\n");
-			return ;
+			return NULL;
 		}
 	}
   //TODO Handle Malformed Requests
