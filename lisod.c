@@ -22,7 +22,7 @@
 #include <sys/time.h>
 #include "parse.h"
 
-#define ECHO_PORT 9999
+//#define ECHO_PORT 9999
 #define BUF_SIZE 8192
 
 int close_socket(int sock)
@@ -38,6 +38,7 @@ int close_socket(int sock)
 int main(int argc, char* argv[])
 {
     int sock, client_sock, maxfdp;
+    int ECHO_PORT;
     ssize_t readret;
     socklen_t cli_size;
     struct sockaddr_in addr, cli_addr;
@@ -58,6 +59,7 @@ int main(int argc, char* argv[])
     }
 
     addr.sin_family = AF_INET;
+    ECHO_PORT = atoi(argv[1]);
     addr.sin_port = htons(ECHO_PORT);
     addr.sin_addr.s_addr = INADDR_ANY;
 
@@ -139,11 +141,6 @@ int main(int argc, char* argv[])
                         close_socket(i);
                         FD_CLR(i, &fds);
                     }
-                    memset(buf, 0, BUF_SIZE);
-                    
-
-
-
                 }
             }
         }   
