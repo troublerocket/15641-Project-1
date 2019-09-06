@@ -106,6 +106,7 @@ int main(int argc, char* argv[])
                 }else{
                     memset(buf, 0, BUF_SIZE);
                     readret = recv(i, buf, BUF_SIZE, 0);
+                    /* 
                     if (send(i, buf, readret, 0) != readret)
                     {
                         close_socket(i);
@@ -113,6 +114,7 @@ int main(int argc, char* argv[])
                         fprintf(stderr, "Error sending to client.\n");
                         //return EXIT_FAILURE;
                     }
+                    */
                     if (readret >= 1){
                         Request* r = parse(buf, readret, i);
                         if(r == NULL){

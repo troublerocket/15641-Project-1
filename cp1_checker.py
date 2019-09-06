@@ -57,7 +57,7 @@ for i in range(numTrials):
             random_string = BAD_REQUESTS[random_index - len(GOOD_REQUESTS)]
             randomLen.append(len(BAD_REQUEST_RESPONSE))
             randomData.append(BAD_REQUEST_RESPONSE)
-        socketSubset[j].send(random_string)
+        socketSubset[j].send(str.encode(random_string))
 
     for j in range(numWritesReads):
         data = socketSubset[j].recv(randomLen[j])
