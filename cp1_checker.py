@@ -69,9 +69,12 @@ for i in range(numTrials):
             data += socketSubset[j].recv(randomLen[j])
             if time.time() - start_time > RECV_TOTAL_TIMEOUT:
                 break
-        if data != randomData[j]:
+        if bytes.decode(data) != randomData[j]:
+            print(j)
+            print(bytes.decode(data))
+            print(randomData[j])
             sys.stderr.write("Error: Data received is not the same as sent! \n")
-            sys.exit(1)
+            #sys.exit(1)
 
 for i in range(numConnections):
     socketList[i].close()

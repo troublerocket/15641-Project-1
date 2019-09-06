@@ -22,8 +22,8 @@
 #include <sys/time.h>
 #include "parse.h"
 
-#define ECHO_PORT 6849
-#define BUF_SIZE 4096
+#define ECHO_PORT 9999
+#define BUF_SIZE 8192
 
 int close_socket(int sock)
 {
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     struct sockaddr_in addr, cli_addr;
     char buf[BUF_SIZE];
     fd_set fds, read_fds;
-    struct timeval timeout={0,0}; 
+    //struct timeval timeout={0,0}; 
 
     FD_ZERO(&fds);
     FD_ZERO(&read_fds);
@@ -77,16 +77,17 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    maxfdp = sock;
     FD_SET(sock, &fds);
+    maxfdp = sock;
 
     /* finally, loop waiting for input and then write it back */
     while (1)
     {
        read_fds = fds; 
-       if(select(maxfdp + 1, &read_fds, NULL, NULL, &timeout) == -1)
+       if(select(maxfdp + 1, &read_fds, NULL, NULL, NULL) == -1)
        {
-           exit(1);
+            perror("select");
+            exit(4);
        } 
        int i = 0;
        for(i = 0; i <= maxfdp; i++){
@@ -101,11 +102,15 @@ int main(int argc, char* argv[])
                     }
                     else{
                         FD_SET(client_sock, &fds);
-                        maxfdp = client_sock > maxfdp ? client_sock : maxfdp;
+                        if(client_sock > maxfdp){
+                            maxfdp = client_sock;
+                        }
                     }
                 }else{
                     memset(buf, 0, BUF_SIZE);
                     readret = recv(i, buf, BUF_SIZE, 0);
+
+                    /* 
                     if (send(i, buf, readret, 0) != readret)
                     {
                         close_socket(i);
@@ -113,18 +118,29 @@ int main(int argc, char* argv[])
                         fprintf(stderr, "Error sending to client.\n");
                         //return EXIT_FAILURE;
                     }
-                    if (readret >= 1){
+                    */
+                    if (readret > 0){
                         Request* r = parse(buf, readret, i);
-                        if(r == NULL){
+                        if(r != NULL){
+                            if(strcmp(r->http_method,"GET") == 0 || strcmp(r->http_method,"POST") == 0 || strcmp(r->http_method,"POST") == 0){
+                                send(i, buf, readret, 0);
+                            }
+                            else{
                             send(i, "HTTP/1.1 400 Bad Request\r\n\r\n", 
-                                strlen("HTTP/1.1 400 Bad Request\r\n\r\n"), 0);
+                            strlen("HTTP/1.1 400 Bad Request\r\n\r\n"), 0);
+                            }
+
                         }else{
-                            send(i, buf, readret, 0);
+                            send(i, "HTTP/1.1 400 Bad Request\r\n\r\n", 
+                            strlen("HTTP/1.1 400 Bad Request\r\n\r\n"), 0);
+
                         }
                     }else{
                         close_socket(i);
                         FD_CLR(i, &fds);
                     }
+                    memset(buf, 0, BUF_SIZE);
+                    
 
 
 

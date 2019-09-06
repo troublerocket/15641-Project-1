@@ -12,8 +12,8 @@ Request * parse(char *buffer, int size, int socketFd) {
 	int i = 0, state;
 	size_t offset = 0;
 	char ch;
-	char buf[8192];
-	memset(buf, 0, 8192);
+	char buf[10000];
+	memset(buf, 0, 10000);
 
 	state = STATE_START;
 	while (state != STATE_CRLFCRLF) {
