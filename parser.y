@@ -10,8 +10,9 @@
 /* Define YACCDEBUG to enable debug messages for this lex file */
 //#define YACCDEBUG
 #define YYERROR_VERBOSE
-#ifdef YACCDEBUG
+#define YACCDEBUG
 #include <stdio.h>
+#ifdef YACCDEBUG
 #define YPRINTF(...) printf(__VA_ARGS__)
 #else
 #define YPRINTF(...)
@@ -92,6 +93,8 @@ Request *parsing_request;
 %type<str> ows
 %type<str> token
 %type<str> text
+%type<str> one_line
+%type<str> multiple_lines
 
 %%
 
@@ -119,12 +122,12 @@ t_dot;
  */
 token:
 allowed_char_for_token {
-	YPRINTF("token: Matched rule 1.\n");
+	YPRINTF("token: %c Matched rule 1.\n", $1);
 	snprintf($$, 8192, "%c", $1);
 }; |
 token allowed_char_for_token {
-	YPRINTF("token: Matched rule 2.\n");
-  snprintf($$, 8192, "%s%c", $1, $2);
+	YPRINTF("token: %s%c Matched rule 2.\n",$1,$2);
+  	snprintf($$, 8192, "%s%c", $1, $2);
 };
 
 /*
@@ -164,11 +167,11 @@ t_backslash {
  * 	   also contains spaces.
  */
 text: allowed_char_for_text {
-	YPRINTF("text: Matched rule 1.\n");
+	YPRINTF("text: %c Matched rule 1.\n", $1);
 	snprintf($$, 8192, "%c", $1);
 }; |
 text ows allowed_char_for_text {
-	YPRINTF("text: Matched rule 2.\n");
+	YPRINTF("text: %s%s%c Matched rule 2.\n",$1, $2, $3);
 	snprintf($$, 8192, "%s%s%c", $1, $2, $3);
 };
 
@@ -189,18 +192,37 @@ t_ws {
 };
 
 request_line: token t_sp text t_sp text t_crlf {
-	YPRINTF("request_Line:\n%s\n%s\n%s\n",$1, $3,$5);
+	YPRINTF("request_Line rule 1:\n%s\n%s\n%s\n",$1,$3,$5);
     strcpy(parsing_request->http_method, $1);
 	strcpy(parsing_request->http_uri, $3);
 	strcpy(parsing_request->http_version, $5);
-}
+};| t_crlf token t_sp text t_sp text t_crlf{
+	YPRINTF("request_Line rule 2:\n%s\n%s\n%s\n",$2,$4,$6);
+    strcpy(parsing_request->http_method, $2);
+	strcpy(parsing_request->http_uri, $4);
+	strcpy(parsing_request->http_version, $6);
 
-request_header: token ows t_colon ows text ows t_crlf {
-	YPRINTF("request_Header:\n%s\n%s\n",$1,$5);
-	//parsing_request->headers = (Request_header* )realloc(parsing_request->headers, sizeof(Request_header) * parsing_request->header_count);
-    strcpy(parsing_request->headers[parsing_request->header_count-1].header_name, $1);
-	strcpy(parsing_request->headers[parsing_request->header_count-1].header_value, $5);
+};
+
+one_line: ows text ows t_lws{
+	YPRINTF("one line 1:\n%s\n",$2);
+};|ows text ows t_crlf{
+	YPRINTF("one line 2:\n%s\n",$2);
+};
+
+multiple_lines: one_line multiple_lines {
+	YPRINTF("multi line 1:\n");
+
+};|{
+	YPRINTF("multi line 2:\n");
+};
+
+request_header: token ows t_colon multiple_lines {
+	YPRINTF("request_Header:\n%s\n",$1);
 	parsing_request->header_count++;
+	parsing_request->headers = (Request_header* )realloc(parsing_request->headers, sizeof(Request_header) * parsing_request->header_count);
+    strcpy(parsing_request->headers[parsing_request->header_count-1].header_name, $1);
+	//strcpy(parsing_request->headers[parsing_request->header_count-1].header_value, $4);
 
 };
 
@@ -211,18 +233,14 @@ request_header: token ows t_colon ows text ows t_crlf {
  * and the annotated excerpted text on the course website. All the best!
  *
  */
-request_headers: request_header {
-	YPRINTF("parsing_request: Matched Success.\n");
-	return SUCCESS;
-} | request_headers request_header{
+request_headers:  {
+}; |request_header request_headers {
+};
+  
+request: request_line request_headers t_crlf{
 	YPRINTF("parsing_request: Matched Success.\n");
 	return SUCCESS;
 };
-  
-request: request_line request_header t_crlf{
-	YPRINTF("parsing_request: Matched Success.\n");
-	return SUCCESS;}
-
 %%
 
 /* C code */

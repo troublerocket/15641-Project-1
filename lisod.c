@@ -22,7 +22,7 @@
 #include <sys/time.h>
 #include "parse.h"
 
-//#define ECHO_PORT 9999
+#define ECHO_PORT 4837
 #define BUF_SIZE 8192
 
 int close_socket(int sock)
@@ -38,13 +38,15 @@ int close_socket(int sock)
 int main(int argc, char* argv[])
 {
     int sock, client_sock, maxfdp;
-    int ECHO_PORT;
     ssize_t readret;
     socklen_t cli_size;
     struct sockaddr_in addr, cli_addr;
-    char buf[BUF_SIZE];
+    char *buf;
     fd_set fds, read_fds;
     //struct timeval timeout={0,0}; 
+    const char* BAD_REQUEST_RESPONSE = "HTTP/1.1 400 Bad Request\r\n\r\n";
+    int BAD_RESPONSE = strlen(BAD_REQUEST_RESPONSE);
+
 
     FD_ZERO(&fds);
     FD_ZERO(&read_fds);
@@ -59,7 +61,6 @@ int main(int argc, char* argv[])
     }
 
     addr.sin_family = AF_INET;
-    ECHO_PORT = atoi(argv[1]);
     addr.sin_port = htons(ECHO_PORT);
     addr.sin_addr.s_addr = INADDR_ANY;
 
@@ -81,6 +82,7 @@ int main(int argc, char* argv[])
 
     FD_SET(sock, &fds);
     maxfdp = sock;
+    buf = (char *)malloc(BUF_SIZE);
 
     /* finally, loop waiting for input and then write it back */
     while (1)
@@ -111,7 +113,22 @@ int main(int argc, char* argv[])
                 }else{
                     memset(buf, 0, BUF_SIZE);
                     readret = recv(i, buf, BUF_SIZE, 0);
-
+                    /* 
+                    int total_len = 0;
+                    char * tmp = NULL;
+                    while((readret = recv(i, buf, BUF_SIZE, 0)) > 0){
+                        total_len += readret;
+                        tmp =(char *)realloc(tmp,readret);
+                        strcat(tmp,buf);
+                        memset(buf, 0, BUF_SIZE);
+                    }
+                    readret = total_len;
+                    if(total_len > BUF_SIZE){
+                        buf = (char *)malloc(total_len+1);
+                        memset(buf, 0, total_len);
+                        strcpy(buf, tmp);
+                    }
+                    */
                     /* 
                     if (send(i, buf, readret, 0) != readret)
                     {
@@ -122,25 +139,30 @@ int main(int argc, char* argv[])
                     }
                     */
                     if (readret > 0){
+                        //printf("received: %s\n",buf);
                         Request* r = parse(buf, readret, i);
                         if(r != NULL){
                             if(strcmp(r->http_method,"GET") == 0 || strcmp(r->http_method,"POST") == 0 || strcmp(r->http_method,"POST") == 0){
                                 send(i, buf, readret, 0);
+                                printf("send:\n%s",buf);
                             }
                             else{
-                            send(i, "HTTP/1.1 400 Bad Request\r\n\r\n", 
-                            strlen("HTTP/1.1 400 Bad Request\r\n\r\n"), 0);
+                            send(i, BAD_REQUEST_RESPONSE, BAD_RESPONSE, 0); 
+                            printf("Wrong method:\n");                           
                             }
 
                         }else{
-                            send(i, "HTTP/1.1 400 Bad Request\r\n\r\n", 
-                            strlen("HTTP/1.1 400 Bad Request\r\n\r\n"), 0);
-
+                            memset(buf, 0, BUF_SIZE);
+                            strcpy(buf,BAD_REQUEST_RESPONSE);
+                            send(i, buf, strlen(buf)+5, 0);
+                            //send(i,buf,readret,0); 
+                            printf("Bad Request:%s\n",buf);    
                         }
                     }else{
                         close_socket(i);
                         FD_CLR(i, &fds);
                     }
+                    //free(buf);
                 }
             }
         }   
@@ -168,7 +190,6 @@ int main(int argc, char* argv[])
            }
            memset(buf, 0, BUF_SIZE);
        } 
-
        if (readret == -1)
        {
            close_socket(client_sock);
@@ -176,7 +197,6 @@ int main(int argc, char* argv[])
            fprintf(stderr, "Error reading from client socket.\n");
            return EXIT_FAILURE;
        }
-
        if (close_socket(client_sock))
        {
            close_socket(sock);
