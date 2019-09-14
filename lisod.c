@@ -22,7 +22,7 @@
 #include <sys/time.h>
 #include "parse.h"
 
-#define ECHO_PORT 4837
+#define ECHO_PORT 4836
 #define BUF_SIZE 8192
 
 int close_socket(int sock)
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
                         }else{
                             memset(buf, 0, BUF_SIZE);
                             strcpy(buf,BAD_REQUEST_RESPONSE);
-                            send(i, buf, strlen(buf)+5, 0);
+                            send(i, buf, strlen(buf), 0);
                             //send(i,buf,readret,0); 
                             printf("Bad Request:%s\n",buf);    
                         }
@@ -162,7 +162,6 @@ int main(int argc, char* argv[])
                         close_socket(i);
                         FD_CLR(i, &fds);
                     }
-                    //free(buf);
                 }
             }
         }   

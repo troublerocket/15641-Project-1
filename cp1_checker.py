@@ -84,6 +84,9 @@ for i in range(numTrials):
 
     for j in range(numWritesReads):
         data = socketSubset[j].recv(randomLen[j])
+        print("data received:"+data)
+        print("length should be:"+str(randomLen[j]))
+        print("length received:"+str(len(data)))
         start_time = time.time()
         while True:
             if len(data) == randomLen[j]:
@@ -96,11 +99,13 @@ for i in range(numTrials):
         print(data)
         print("the client should have received:")
         print(randomData[j])
+        '''
         for count in range(len(data)):
             if data[count] == randomData[j][count]:
                 continue
             else:
                 print(count)
+        '''
         
         if data != randomData[j]:
             sys.stderr.write("Error: Data received is not the same as sent! \n")
